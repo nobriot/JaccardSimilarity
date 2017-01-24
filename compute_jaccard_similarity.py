@@ -54,46 +54,51 @@ for website in top_words_tfidf_web:
         if verbose and webpage_index % 200 == 0: 
             print "Starting to compare webpage : " + str(webpage_index) + " out of " + str(len(top_words_tfidf_web[website]))
         
-        #Get the current web word list in a variable, it avoids repeating the long variable name everywhere
-        web_word_list = top_words_tfidf_web[website][webpage].keys()
+        try : 
+            #Get the current web word list in a variable, it avoids repeating the long variable name everywhere
+            web_word_list = top_words_tfidf_web[website][webpage].keys()
 
-        #Now start comparing the current page with every Orbit department->document->topwords.
-        for orbit_department in top_words_tfidf_orbit:
-            for orbit_document_id in top_words_tfidf_orbit[orbit_department]:
-                
-                #Get the current orbit word list in a variable, it avoids repeating the long variable name everywhere
-                orbit_word_list = top_words_tfidf_orbit[orbit_department][orbit_document_id].keys()
+            #Now start comparing the current page with every Orbit department->document->topwords.
+            for orbit_department in top_words_tfidf_orbit:
+                for orbit_document_id in top_words_tfidf_orbit[orbit_department]:
 
-                #Compute the jaccard similarity : 
-                common_words = len(list(set(web_word_list).intersection(orbit_word_list)))
-                words_total = len(web_word_list)+len(orbit_word_list)
+                    #Get the current orbit word list in a variable, it avoids repeating the long variable name everywhere
+                    orbit_word_list = top_words_tfidf_orbit[orbit_department][orbit_document_id].keys()
+
+                    #Compute the jaccard similarity : 
+                    common_words = len(list(set(web_word_list).intersection(orbit_word_list)))
+                    words_total = len(web_word_list)+len(orbit_word_list)
+
+                    #Compute the jaccard distance. Remember to cast into float to get decimals
+                    jaccard_distance = float(common_words)/(words_total-common_words)
+
+                    # Minimum requirement test : 
+                    if (jaccard_distance * common_words) >= pass_criteria and jaccard_distance> min_jaccard_distance:
+                        # Keep a list of the common terms
+                        common_terms=list(set(web_word_list).intersection(orbit_word_list))
+                        # Create a comparison list for the result: 
+                        comparison_result = [website, webpage , orbit_department, orbit_document_id ,common_words, jaccard_distance, words_total, common_terms]
+
+                        #Check whether the result is not already in :
+                        keep_comparison_result = True
+                        for result in match_result_list : 
+                            if result[0] == comparison_result[0] and result[3] == comparison_result[3] :
+                                #tiebreak between the matches : 
+                                if result[5] >= comparison_result[5] : 
+                                    keep_comparison_result = False
+                                else : 
+                                    match_result_list.remove(result)
+
+                        if keep_comparison_result:                    
+                            match_result_list.append(comparison_result)
+
+                        #Small printout in the console
+                        if verbose : 
+                            print "Number of matches : " + str(len(match_result_list))
+        except Exception as e:
+            if verbose : 
+                print "Exception thrown in jaccard comparison : %s" % e #In case an error happened, just skip the comparison
                 
-                #Compute the jaccard distance. Remember to cast into float to get decimals
-                jaccard_distance = float(common_words)/(words_total-common_words)
-                
-                # Minimum requirement test : 
-                if (jaccard_distance * common_words) >= pass_criteria and jaccard_distance> min_jaccard_distance:
-                    # Keep a list of the common terms
-                    common_terms=list(set(web_word_list).intersection(orbit_word_list))
-                    # Create a comparison list for the result: 
-                    comparison_result = [website, webpage , orbit_department, orbit_document_id ,common_words, jaccard_distance, words_total, common_terms]
-                    
-                    #Check whether the result is not already in :
-                    keep_comparison_result = True
-                    for result in match_result_list : 
-                        if result[0] == comparison_result[0] and result[3] == comparison_result[3] :
-                            #tiebreak between the matches : 
-                            if result[5] >= comparison_result[5] : 
-                                keep_comparison_result = False
-                            else : 
-                                match_result_list.remove(result)
-                    
-                    if keep_comparison_result:                    
-                        match_result_list.append(comparison_result)
-                    
-                    #Small printout in the console
-                    if verbose : 
-                        print "Number of matches : " + str(len(match_result_list))
     
 
 
