@@ -106,9 +106,8 @@ for website in top_words_tfidf_web:
                     #Small printout in the console
                     if verbose : 
                         print "Number of matches : " + str(len(match_result_list))
+
     
-
-
 #%% Post processing the result (re-ordering)    
 for index in range(0,len(match_result_list)) : 
     # Remove some letters or whatever is in front at the beginning of orbit_department
