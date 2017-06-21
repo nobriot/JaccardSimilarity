@@ -25,11 +25,11 @@ min_jaccard_distance = 0.13
 
 
 #%% 1. Load the JSON variables in the res folder.
-input_file = open(working_directory + "res/" + "top_words_tfidf_web_new.json")
+input_file = open(working_directory + "res/" + "top_words_tfidf_web_Juni.json")
 top_words_tfidf_web = json.load(input_file)
 input_file.close()
 
-input_file = open(working_directory + "res/" + "top_words_tfidf_orbit_1.json")
+input_file = open(working_directory + "res/" + "top_words_tfidf_orbit_Juni.json")
 top_words_tfidf_orbit = json.load(input_file)
 input_file.close()
 
@@ -55,14 +55,24 @@ for website in top_words_tfidf_web:
             print "Starting to compare webpage : " + str(webpage_index) + " out of " + str(len(top_words_tfidf_web[website]))
         
         #Get the current web word list in a variable, it avoids repeating the long variable name everywhere
-        web_word_list = top_words_tfidf_web[website][webpage].keys()
+        if type(top_words_tfidf_web[website][webpage]) == list:
+            web_word_list = top_words_tfidf_web[website][webpage]
+        elif type(top_words_tfidf_web[website][webpage]) == dict:
+            web_word_list = top_words_tfidf_web[website][webpage].keys()
+        else: #If it is a single word, string or empty, we put it into a list
+            web_word_list = [top_words_tfidf_web[website][webpage]]
 
         #Now start comparing the current page with every Orbit department->document->topwords.
         for orbit_department in top_words_tfidf_orbit:
             for orbit_document_id in top_words_tfidf_orbit[orbit_department]:
                 
                 #Get the current orbit word list in a variable, it avoids repeating the long variable name everywhere
-                orbit_word_list = top_words_tfidf_orbit[orbit_department][orbit_document_id].keys()
+                if type(top_words_tfidf_orbit[orbit_department][orbit_document_id]) == list:
+                    orbit_word_list = top_words_tfidf_orbit[orbit_department][orbit_document_id]
+                elif type(top_words_tfidf_orbit[orbit_department][orbit_document_id]) == dict:
+                    orbit_word_list = top_words_tfidf_orbit[orbit_department][orbit_document_id].keys()
+                else: #If it is a single word, string or empty, we put it into a list
+                    orbit_word_list = [top_words_tfidf_orbit[orbit_department][orbit_document_id]]
 
                 #Compute the jaccard similarity : 
                 common_words = len(list(set(web_word_list).intersection(orbit_word_list)))
@@ -90,7 +100,9 @@ for website in top_words_tfidf_web:
                     
                     if keep_comparison_result:                    
                         match_result_list.append(comparison_result)
-                    
+                        print "New Match : Common words : ",
+                        print common_terms
+                
                     #Small printout in the console
                     if verbose : 
                         print "Number of matches : " + str(len(match_result_list))
@@ -190,61 +202,3 @@ output_file.close()
 #output_file.write(json.dumps(filtered_match_result_list))
 #output_file.close()
 
-
-#%% Initial R Code 
-### : 
-## the outer loop is web and the inner is orbit- as orbit has less different coprora (21)
-#ind= 0
-#for (item in 59:117){
-#  # to find the web corpus name
-#  name_of_dtm<-(names(top_words_tfidf_web_1[item]))
-#  
-#  for (row_doc in 1:nrow(as.matrix(top_words_tfidf_web_1[[item]]))){
-#    print(paste('start', row_doc, 'from', item))
-#    # find the single doc back
-#    name_of_doc<- row.names(as.matrix(top_words_tfidf_web_1[[item]])) [row_doc]
-#    the_best_per_doc<- as.matrix(unlist(top_words_tfidf_web_1[[item]][[row_doc]]))
-#    words_for_web<-rownames(the_best_per_doc)
-#    
-#    
-#    for( dp in 1:length(top_words_tfidf_orbit_1) ) {
-#      #Find which department corpus
-#      name_of_dtm_orbit<-(names(top_words_tfidf_orbit_1[dp]))
-#      #nam2<-list()
-#      for (row_doc_2 in 1:nrow(as.matrix(top_words_tfidf_orbit_1[[dp]]))){
-#        #Find ID for the doc
-#        name_of_doc_orbit<- row.names(as.matrix(top_words_tfidf_orbit_1[[dp]])) [row_doc_2]
-#        the_best_per_doc_orbit<- as.matrix(unlist(top_words_tfidf_orbit_1[[dp]][[row_doc_2]]))
-#        words_for_orbit<-rownames(the_best_per_doc_orbit)
-#        # we compare and calculate Jaccard:
-#        
-#        common_words<-length(intersect(words_for_orbit,words_for_web))
-#        distance<- common_words/(length(words_for_orbit)+length(words_for_web)-common_words)
-#        #we find total words
-#        words_total<-length(words_for_web)+length(words_for_orbit)
-#        
-#        #we find the real terms:to ensure we found the right docs containing these words!
-#        common_terms<-intersect(words_for_orbit,words_for_web)
-#        
-#        #name<-paste0("tp", name_of_doc_orbit)
-#        comparison<-c(name_of_dtm, name_of_doc , dp, name_of_doc_orbit ,common_words, distance, words_total)
-#        
-#        #we set the threshold:
-#        if ((distance* common_words)>=(0.15 * 7)){
-#          ind= ind+1
-#          print(ind)
-#          name1<-paste0('dp',dp, sep= '_', ind)
-#          
-#          name2<-paste('number', ind)
-#          pair_list1[[name2]]<-comparison
-#          list_of_terms_1[[name2]]<-common_terms
-#        }
-#      } 
-#      
-#    }
-#  }
-#}
-#
-## we  save the list:
-#save(pair_list1, file = 'new_pairs')
-#
